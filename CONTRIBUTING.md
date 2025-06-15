@@ -42,15 +42,15 @@ If you’d like to use the repository from source, you can either install from g
 To install via git:
 
 ```sh
-$ npm install git+ssh://git@github.com:stainless-sdks/agu-token-typescript.git
+$ npm install git+ssh://git@github.com:Boomchainlab/agu-token-dapp.git
 ```
 
 Alternatively, to link a local copy of the repo:
 
 ```sh
 # Clone
-$ git clone https://www.github.com/stainless-sdks/agu-token-typescript
-$ cd agu-token-typescript
+$ git clone https://www.github.com/Boomchainlab/agu-token-dapp
+$ cd agu-token-dapp
 
 # With yarn
 $ yarn link
