@@ -1,103 +1,362 @@
-The $AGU Token DApp is a next-generation, blockchain-native interface for interacting with the $AGU token on the Base network. It provides users with access to secure token interactions, real-time market insights, and gamified DeFi experiences through a scalable frontend and modular backend architecture.
+# Agu Token TypeScript API Library
 
-This DApp also integrates Solana trading infrastructure via QuickNode to extend cross-chain data feeds, token swap quotes, and decentralized market interactions.
+[![NPM version](https://img.shields.io/npm/v/agu-token.svg)](https://npmjs.org/package/agu-token) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/agu-token)
 
-⸻
+This library provides convenient access to the Agu Token REST API from server-side TypeScript or JavaScript.
 
-Base Chain Module (Primary Contract Layer)
+The full API of this library can be found in [api.md](api.md).
 
-The $AGU ERC20 contract is deployed on Base, Ethereum’s Layer 2 built on Optimism. The contract includes:
-	•	Upgradeable token architecture (OpenZeppelin 5.x compatible)
-	•	Flash minting, permit signatures, and vote delegation
-	•	Owner-based mint access control
-	•	Proxy-safe initializer pattern
+It is generated with [Stainless](https://www.stainless.com/).
 
-Key Details
-Name
-Symbol
-$AGU
-AGU
-Network
-Base (Optimism L2)
-Standard
-ERC20Upgradeable
+## Installation
 
-Example Contract Methods
-function initialize(address initialOwner) public initializer;
-function mint(address to, uint256 amount) public onlyOwner;
+```sh
+npm install git+ssh://git@github.com:stainless-sdks/agu-token-typescript.git
+```
 
-📌 Admin Contact: admin@boomchainlab.com
-📣 Twitter: @Agunnaya001
+> [!NOTE]
+> Once this package is [published to npm](https://app.stainless.com/docs/guides/publish), this will become: `npm install agu-token`
 
-⸻
+## Usage
 
-Solana Integration Module (Cross-Chain Trading Layer)
+The full API of this library can be found in [api.md](api.md).
 
-This module equips the backend with high-performance Solana API endpoints via QuickNode, enabling powerful DEX interactions and market visualization.
+<!-- prettier-ignore -->
+```js
+import AguToken from 'agu-token';
 
-Available REST Endpoints
+const client = new AguToken({
+  apiKey: process.env['PETSTORE_API_KEY'], // This is the default and can be omitted
+});
 
-Endpoint
-Method
-Description
-/solana/price
-GET
-Retrieve current Solana price data
-/solana/markets
-GET
-Fetch Solana market listings
-/solana/new-pools
-GET
-List new liquidity pools on Solana
-/solana/pump/quote
-POST
-Get pump quote for token swaps
-/solana/pump/swap
-POST
-Generate swap instructions
-/solana/limit-orders/create
-POST
-Create a limit order
-/solana/limit-orders/open
-POST
-Retrieve open limit orders
-/solana/limit-orders/cancel
-POST
-Cancel an existing limit order
+const order = await client.store.order.create({ petId: 1, quantity: 1, status: 'placed' });
 
-Setup Instructions
-	1.	Blueprint Registration
+console.log(order.id);
+```
 
-In your app.py or equivalent:
-from app.solana.routes import solana_bp
-app.register_blueprint(solana_bp)
+### Request & Response types
 
-2.	Environment Config
-In your .env file:
-QUICKNODE_API_KEY=your_quicknode_api_key_here
+This library includes TypeScript definitions for all request params and response fields. You may import and use them like so:
 
-	3.	Run Your Flask Server
+<!-- prettier-ignore -->
+```ts
+import AguToken from 'agu-token';
 
-Ensure the backend loads with the correct API keys and route mappings.
+const client = new AguToken({
+  apiKey: process.env['PETSTORE_API_KEY'], // This is the default and can be omitted
+});
 
-⸻
+const response: AguToken.StoreListInventoryResponse = await client.store.listInventory();
+```
 
-Flask Blueprint: Solana Route Handler
-from flask import Blueprint
-from app.solana.quicknode import get_price, get_markets, get_new_pools
-from app.solana.pump import get_pump_quote, get_pump_swap
-from app.solana.jupiter import create_limit_order, open_orders, cancel_order
+Documentation for each method, request param, and response field are available in docstrings and will appear on hover in most modern editors.
 
-solana_bp = Blueprint('solana', __name__, url_prefix='/solana')
+## Handling errors
 
-solana_bp.add_url_rule('/price', 'get_price', get_price, methods=['GET'])
-solana_bp.add_url_rule('/markets', 'get_markets', get_markets, methods=['GET'])
-solana_bp.add_url_rule('/new-pools', 'get_new_pools', get_new_pools, methods=['GET'])
-solana_bp.add_url_rule('/pump/quote', 'get_pump_quote', get_pump_quote, methods=['POST'])
-solana_bp.add_url_rule('/pump/swap', 'get_pump_swap', get_pump_swap, methods=['POST'])
-solana_bp.add_url_rule('/limit-orders/create', 'create_limit_order', create_limit_order, methods=['POST'])
-solana_bp.add_url_rule('/limit-orders/open', 'open_orders', open_orders, methods=['POST'])
-solana_bp.add_url_rule('/limit-orders/cancel', 'cancel_order', cancel_order, methods=['POST'])
+When the library is unable to connect to the API,
+or if the API returns a non-success status code (i.e., 4xx or 5xx response),
+a subclass of `APIError` will be thrown:
 
+<!-- prettier-ignore -->
+```ts
+const response = await client.store.listInventory().catch(async (err) => {
+  if (err instanceof AguToken.APIError) {
+    console.log(err.status); // 400
+    console.log(err.name); // BadRequestError
+    console.log(err.headers); // {server: 'nginx', ...}
+  } else {
+    throw err;
+  }
+});
+```
 
-This README empowers developers to rapidly onboard into the $AGU ecosystem, leveraging Base for core token mechanics and Solana for liquidity analytics and real-time trading operations.
+Error codes are as follows:
+
+| Status Code | Error Type                 |
+| ----------- | -------------------------- |
+| 400         | `BadRequestError`          |
+| 401         | `AuthenticationError`      |
+| 403         | `PermissionDeniedError`    |
+| 404         | `NotFoundError`            |
+| 422         | `UnprocessableEntityError` |
+| 429         | `RateLimitError`           |
+| >=500       | `InternalServerError`      |
+| N/A         | `APIConnectionError`       |
+
+### Retries
+
+Certain errors will be automatically retried 2 times by default, with a short exponential backoff.
+Connection errors (for example, due to a network connectivity problem), 408 Request Timeout, 409 Conflict,
+429 Rate Limit, and >=500 Internal errors will all be retried by default.
+
+You can use the `maxRetries` option to configure or disable this:
+
+<!-- prettier-ignore -->
+```js
+// Configure the default for all requests:
+const client = new AguToken({
+  maxRetries: 0, // default is 2
+});
+
+// Or, configure per-request:
+await client.store.listInventory({
+  maxRetries: 5,
+});
+```
+
+### Timeouts
+
+Requests time out after 1 minute by default. You can configure this with a `timeout` option:
+
+<!-- prettier-ignore -->
+```ts
+// Configure the default for all requests:
+const client = new AguToken({
+  timeout: 20 * 1000, // 20 seconds (default is 1 minute)
+});
+
+// Override per-request:
+await client.store.listInventory({
+  timeout: 5 * 1000,
+});
+```
+
+On timeout, an `APIConnectionTimeoutError` is thrown.
+
+Note that requests which time out will be [retried twice by default](#retries).
+
+## Advanced Usage
+
+### Accessing raw Response data (e.g., headers)
+
+The "raw" `Response` returned by `fetch()` can be accessed through the `.asResponse()` method on the `APIPromise` type that all methods return.
+This method returns as soon as the headers for a successful response are received and does not consume the response body, so you are free to write custom parsing or streaming logic.
+
+You can also use the `.withResponse()` method to get the raw `Response` along with the parsed data.
+Unlike `.asResponse()` this method consumes the body, returning once it is parsed.
+
+<!-- prettier-ignore -->
+```ts
+const client = new AguToken();
+
+const response = await client.store.listInventory().asResponse();
+console.log(response.headers.get('X-My-Header'));
+console.log(response.statusText); // access the underlying Response object
+
+const { data: response, response: raw } = await client.store.listInventory().withResponse();
+console.log(raw.headers.get('X-My-Header'));
+console.log(response);
+```
+
+### Logging
+
+> [!IMPORTANT]
+> All log messages are intended for debugging only. The format and content of log messages
+> may change between releases.
+
+#### Log levels
+
+The log level can be configured in two ways:
+
+1. Via the `AGU_TOKEN_LOG` environment variable
+2. Using the `logLevel` client option (overrides the environment variable if set)
+
+```ts
+import AguToken from 'agu-token';
+
+const client = new AguToken({
+  logLevel: 'debug', // Show all log messages
+});
+```
+
+Available log levels, from most to least verbose:
+
+- `'debug'` - Show debug messages, info, warnings, and errors
+- `'info'` - Show info messages, warnings, and errors
+- `'warn'` - Show warnings and errors (default)
+- `'error'` - Show only errors
+- `'off'` - Disable all logging
+
+At the `'debug'` level, all HTTP requests and responses are logged, including headers and bodies.
+Some authentication-related headers are redacted, but sensitive data in request and response bodies
+may still be visible.
+
+#### Custom logger
+
+By default, this library logs to `globalThis.console`. You can also provide a custom logger.
+Most logging libraries are supported, including [pino](https://www.npmjs.com/package/pino), [winston](https://www.npmjs.com/package/winston), [bunyan](https://www.npmjs.com/package/bunyan), [consola](https://www.npmjs.com/package/consola), [signale](https://www.npmjs.com/package/signale), and [@std/log](https://jsr.io/@std/log). If your logger doesn't work, please open an issue.
+
+When providing a custom logger, the `logLevel` option still controls which messages are emitted, messages
+below the configured level will not be sent to your logger.
+
+```ts
+import AguToken from 'agu-token';
+import pino from 'pino';
+
+const logger = pino();
+
+const client = new AguToken({
+  logger: logger.child({ name: 'AguToken' }),
+  logLevel: 'debug', // Send all messages to pino, allowing it to filter
+});
+```
+
+### Making custom/undocumented requests
+
+This library is typed for convenient access to the documented API. If you need to access undocumented
+endpoints, params, or response properties, the library can still be used.
+
+#### Undocumented endpoints
+
+To make requests to undocumented endpoints, you can use `client.get`, `client.post`, and other HTTP verbs.
+Options on the client, such as retries, will be respected when making these requests.
+
+```ts
+await client.post('/some/path', {
+  body: { some_prop: 'foo' },
+  query: { some_query_arg: 'bar' },
+});
+```
+
+#### Undocumented request params
+
+To make requests using undocumented parameters, you may use `// @ts-expect-error` on the undocumented
+parameter. This library doesn't validate at runtime that the request matches the type, so any extra values you
+send will be sent as-is.
+
+```ts
+client.foo.create({
+  foo: 'my_param',
+  bar: 12,
+  // @ts-expect-error baz is not yet public
+  baz: 'undocumented option',
+});
+```
+
+For requests with the `GET` verb, any extra params will be in the query, all other requests will send the
+extra param in the body.
+
+If you want to explicitly send an extra argument, you can do so with the `query`, `body`, and `headers` request
+options.
+
+#### Undocumented response properties
+
+To access undocumented response properties, you may access the response object with `// @ts-expect-error` on
+the response object, or cast the response object to the requisite type. Like the request params, we do not
+validate or strip extra properties from the response from the API.
+
+### Customizing the fetch client
+
+By default, this library expects a global `fetch` function is defined.
+
+If you want to use a different `fetch` function, you can either polyfill the global:
+
+```ts
+import fetch from 'my-fetch';
+
+globalThis.fetch = fetch;
+```
+
+Or pass it to the client:
+
+```ts
+import AguToken from 'agu-token';
+import fetch from 'my-fetch';
+
+const client = new AguToken({ fetch });
+```
+
+### Fetch options
+
+If you want to set custom `fetch` options without overriding the `fetch` function, you can provide a `fetchOptions` object when instantiating the client or making a request. (Request-specific options override client options.)
+
+```ts
+import AguToken from 'agu-token';
+
+const client = new AguToken({
+  fetchOptions: {
+    // `RequestInit` options
+  },
+});
+```
+
+#### Configuring proxies
+
+To modify proxy behavior, you can provide custom `fetchOptions` that add runtime-specific proxy
+options to requests:
+
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/node.svg" align="top" width="18" height="21"> **Node** <sup>[[docs](https://github.com/nodejs/undici/blob/main/docs/docs/api/ProxyAgent.md#example---proxyagent-with-fetch)]</sup>
+
+```ts
+import AguToken from 'agu-token';
+import * as undici from 'undici';
+
+const proxyAgent = new undici.ProxyAgent('http://localhost:8888');
+const client = new AguToken({
+  fetchOptions: {
+    dispatcher: proxyAgent,
+  },
+});
+```
+
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/bun.svg" align="top" width="18" height="21"> **Bun** <sup>[[docs](https://bun.sh/guides/http/proxy)]</sup>
+
+```ts
+import AguToken from 'agu-token';
+
+const client = new AguToken({
+  fetchOptions: {
+    proxy: 'http://localhost:8888',
+  },
+});
+```
+
+<img src="https://raw.githubusercontent.com/stainless-api/sdk-assets/refs/heads/main/deno.svg" align="top" width="18" height="21"> **Deno** <sup>[[docs](https://docs.deno.com/api/deno/~/Deno.createHttpClient)]</sup>
+
+```ts
+import AguToken from 'npm:agu-token';
+
+const httpClient = Deno.createHttpClient({ proxy: { url: 'http://localhost:8888' } });
+const client = new AguToken({
+  fetchOptions: {
+    client: httpClient,
+  },
+});
+```
+
+## Frequently Asked Questions
+
+## Semantic versioning
+
+This package generally follows [SemVer](https://semver.org/spec/v2.0.0.html) conventions, though certain backwards-incompatible changes may be released as minor versions:
+
+1. Changes that only affect static types, without breaking runtime behavior.
+2. Changes to library internals which are technically public but not intended or documented for external use. _(Please open a GitHub issue to let us know if you are relying on such internals.)_
+3. Changes that we do not expect to impact the vast majority of users in practice.
+
+We take backwards-compatibility seriously and work hard to ensure you can rely on a smooth upgrade experience.
+
+We are keen for your feedback; please open an [issue](https://www.github.com/stainless-sdks/agu-token-typescript/issues) with questions, bugs, or suggestions.
+
+## Requirements
+
+TypeScript >= 4.9 is supported.
+
+The following runtimes are supported:
+
+- Web browsers (Up-to-date Chrome, Firefox, Safari, Edge, and more)
+- Node.js 20 LTS or later ([non-EOL](https://endoflife.date/nodejs)) versions.
+- Deno v1.28.0 or higher.
+- Bun 1.0 or later.
+- Cloudflare Workers.
+- Vercel Edge Runtime.
+- Jest 28 or greater with the `"node"` environment (`"jsdom"` is not supported at this time).
+- Nitro v2.6 or greater.
+
+Note that React Native is not supported at this time.
+
+If you are interested in other runtime environments, please open or upvote an issue on GitHub.
+
+## Contributing
+
+See [the contributing documentation](./CONTRIBUTING.md).
