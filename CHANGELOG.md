@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 (2025-06-16)
+
+Full Changelog: [v1.0.1...v1.0.2](https://github.com/Boomchainlab/agu-token-dapp/compare/v1.0.1...v1.0.2)
+
+### Chores
+
+* update SDK settings ([f175de3](https://github.com/Boomchainlab/agu-token-dapp/commit/f175de3a84d852362d0d39b4101750fad7a91524))
+
 ## 1.0.1 (2025-06-16)
 
 Full Changelog: [v1.0.0...v1.0.1](https://github.com/Boomchainlab/agu-token-dapp/compare/v1.0.0...v1.0.1)
