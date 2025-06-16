@@ -1,6 +1,6 @@
 {
   "name": "agu-token",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The official TypeScript library for the Agu Token API",
   "author": "Agu Token <>",
   "types": "dist/index.d.ts",
