@@ -55,7 +55,7 @@ jobs:
       - name: Get GitHub OIDC Token
         if: github.repository == 'stainless-sdks/agu-token-typescript'
         id: github-oidc
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: core.setOutput('github_token', await core.getIDToken());
 
