@@ -18,7 +18,7 @@ jobs:
     name: lint
     runs-on: ${{ github.repository == 'stainless-sdks/agu-token-typescript' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -39,7 +39,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -71,7 +71,7 @@ jobs:
     name: test
     runs-on: ${{ github.repository == 'stainless-sdks/agu-token-typescript' && 'depot-ubuntu-24.04' || 'ubuntu-latest' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Node
         uses: actions/setup-node@v4
